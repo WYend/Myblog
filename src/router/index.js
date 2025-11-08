@@ -18,26 +18,27 @@ const routes = [
     component: () => import("@/views/Register.vue"),
     meta: { guestOnly: true }, // 仅游客可访问
   },
-  // {
-  //   path: "/articles",
-  //   name: "ArticleList",
-  //   component: () => import("@/views/ArticleList.vue"),
-  // },
-  // {
-  //   path: "/article/:id",
-  //   name: "ArticleDetail",
-  //   component: () => import("@/views/ArticleDetail.vue"),
-  // },
-  // {
-  //   path: "/category/:category",
-  //   name: "Category",
-  //   component: () => import("@/views/CategoryTag.vue"),
-  // },
-  // {
-  //   path: "/tag/:tag",
-  //   name: "Tag",
-  //   component: () => import("@/views/CategoryTag.vue"),
-  // },
+  {
+    path: "/articles",
+    name: "ArticleList",
+    component: () => import("@/views/ArticleList.vue"),
+  },
+  {
+    path: "/category/:category",
+    name: "Category",
+    component: () => import("@/views/ArticleList.vue"),
+  },
+  {
+    path: "/tag/:tag",
+    name: "Tag",
+    component: () => import("@/views/ArticleList.vue"),
+  },
+  {
+    path: "/article/:id",
+    name: "ArticleDetail",
+    component: () => import("@/views/ArticleDetail.vue"),
+    props: true, // 将路由参数作为props传递
+  },
 ];
 
 const router = createRouter({
