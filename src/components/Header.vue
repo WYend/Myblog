@@ -10,9 +10,15 @@
         <!-- 可以添加更多导航链接 -->
       </nav>
       <div class="header-right">
-        <el-input placeholder="搜索文章..." class="search-input" size="small">
+        <el-input
+          v-model="searchKeyword"
+          placeholder="搜索文章..."
+          class="search-input"
+          size="small"
+          @keyup.enter="handleSearch"
+        >
           <template #append>
-            <el-button :icon="Search" />
+            <el-button :icon="Search" @click="handleSearch" />
           </template>
         </el-input>
         <el-switch
@@ -56,7 +62,10 @@ import { ref } from "vue";
 import { Search, Moon, Sunny } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 import { ElMessageBox } from "element-plus";
+
 const isDark = ref(false);
+const router = useRouter();
+const searchKeyword = ref("");
 
 const toggleDarkMode = (val) => {
   // 切换暗色模式的逻辑
@@ -67,7 +76,20 @@ const toggleDarkMode = (val) => {
   }
 };
 
-const router = useRouter();
+// 搜索处理
+const handleSearch = () => {
+  if (searchKeyword.value.trim()) {
+    router.push({
+      path: "/articles",
+      query: {
+        keyword: searchKeyword.value.trim(),
+        page: 1,
+      },
+    });
+    searchKeyword.value = ""; // 清空搜索框
+  }
+};
+
 const isLoggedIn = ref(false); // 根据实际登录状态更新
 const user = ref({
   username: "管理员",

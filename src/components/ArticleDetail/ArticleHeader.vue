@@ -16,8 +16,8 @@
 
       <div class="article-info">
         <div class="author-info">
-          <el-avatar :size="40" :src="article.author.avatar" />
-          <span class="author-name">{{ article.author.name }}</span>
+          <!-- <el-avatar :size="40" :src="article.author.avatar" /> -->
+          <span class="author-name">{{ article.authorName }}</span>
         </div>
 
         <div class="meta-items">

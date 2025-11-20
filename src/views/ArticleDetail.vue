@@ -47,6 +47,9 @@ import { useRoute } from "vue-router";
 import { renderMarkdown } from "@/utils/markdownRederer";
 import ArticleHeader from "@/components/ArticleDetail/ArticleHeader.vue";
 import ArticleFooter from "@/components/ArticleDetail/ArticleFooter.vue";
+import { articleApi } from "@/api/articles";
+import { ElMessage } from "element-plus";
+
 const route = useRoute();
 const loading = ref(true);
 const error = ref(null);
@@ -64,66 +67,13 @@ const loadArticle = async () => {
     loading.value = true;
     error.value = null;
 
-    // 模拟API调用 - 后续替换为真实API
     const articleId = route.params.id;
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    const response = await articleApi.getArticleById(articleId);
 
-    // 模拟数据
-    const mockArticle = {
-      id: articleId,
-      title: `深入理解Vue 3响应式原理`,
-      content: `# 深入理解Vue 3响应式原理
+    article.value = response.data || response;
 
-## 前言
-
-Vue 3的响应式系统相比Vue 2有了重大的重构，使用Proxy替代了Object.defineProperty。这篇文章将深入探讨Vue 3响应式系统的实现原理。
-
-## 核心概念
-
-### 1. Reactive API
-
-\`\`\`javascript
-import { reactive } from 'vue'
-
-const state = reactive({
-  count: 0,
-  user: {
-    name: 'John',
-    age: 25
-  }
-})
-\`\`\`
-
-### 2. Ref API
-
-\`\`\`javascript
-import { ref } from 'vue'
-
-const count = ref(0)
-console.log(count.value) // 0
-\`\`\`
-
-## 实现原理
-
-Vue 3使用Proxy来追踪对象的变化...`,
-      summary:
-        "本文详细解析Vue 3响应式系统的实现原理，包括reactive、ref、effect等核心API的工作机制。",
-      publishTime: "2024-01-15T10:00:00Z",
-      viewCount: 256,
-      category: { id: 1, name: "前端开发" },
-      tags: [
-        { id: 1, name: "Vue" },
-        { id: 2, name: "JavaScript" },
-        { id: 3, name: "前端框架" },
-      ],
-      author: {
-        id: 1,
-        name: "开发者",
-        avatar: "https://picsum.photos/40",
-      },
-    };
-
-    article.value = mockArticle;
+    // 更新阅读量
+    await articleApi.increaseViewCount(articleId);
   } catch (err) {
     error.value = err.message || "加载文章失败";
     console.error("加载文章失败:", err);

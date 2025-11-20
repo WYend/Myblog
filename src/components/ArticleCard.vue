@@ -45,15 +45,17 @@
         </el-button>
       </div>
     </div>
+    <!--     
     <div class="article-thumb" v-if="article.thumbnail">
       <img :src="article.thumbnail" alt="文章缩略图" />
     </div>
+-->
   </div>
 </template>
 
 <script setup>
 import { Calendar, View } from "@element-plus/icons-vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps({
   article: {
@@ -64,7 +66,7 @@ const props = defineProps({
 
 const router = useRouter();
 
-// 后续直接引用数据库数据
+// 格式化日期：后续直接引用数据库数据
 const formatDate = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -75,18 +77,30 @@ const formatDate = (dateString) => {
   });
 };
 
+// 跳转到文章详情页
 const navigateToDetail = () => {
   router.push(`/article/${props.article.id}`);
 };
 
+// 按分类筛选文章
 const navigateToCategory = () => {
   if (props.article.category) {
-    router.push(`/category/${props.article.category.name}`);
+    router.push({
+      path: "/articles",
+      query: { categoryId: props.article.category.id },
+    });
   }
 };
 
+// 按标签筛选文章
 const navigateToTag = (tag) => {
-  router.push(`/article/${props.article.id}`);
+  router.push({
+    path: "/articles",
+    query: {
+      tagId: tag.id,
+      page: 1,
+    },
+  });
 };
 </script>
 

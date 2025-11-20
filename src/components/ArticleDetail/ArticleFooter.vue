@@ -2,9 +2,9 @@
   <footer class="article-footer">
     <div class="footer-content">
       <div class="action-buttons">
-        <el-button type="primary" :icon="Share" round>分享</el-button>
-        <el-button :icon="Star" round>收藏</el-button>
-        <el-button :icon="ThumbUpFilled" round>点赞</el-button>
+        <el-button type="primary" round>分享</el-button>
+        <el-button round>收藏</el-button>
+        <el-button round>点赞</el-button>
       </div>
 
       <div class="article-meta-footer">
@@ -20,7 +20,6 @@
 </template>
 
 <script setup>
-
 const props = defineProps({
   article: {
     type: Object,

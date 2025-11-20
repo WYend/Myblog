@@ -22,7 +22,7 @@
             v-for="item in categories"
             :key="item.id"
             :label="item.name"
-            :value="item.name"
+            :value="item.id"
           />
         </el-select>
 
@@ -89,6 +89,8 @@
 import { ref, reactive, onMounted, watch, computed, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ArticleCard from "@/components/ArticleCard.vue";
+import { articleApi, tagApi } from "@/api/articles";
+import { ElMessage } from "element-plus";
 
 const route = useRoute();
 const router = useRouter();
@@ -106,128 +108,84 @@ const loading = ref(false);
 
 const filter = reactive({
   category: null,
-  tag: null,
+  tagId: null,
   keyword: "",
 });
 
 // 屏幕尺寸检测
 const isSmallScreen = ref(window.innerWidth < 768);
 
-// 模拟数据 - 后续替换为API调用
-const mockArticles = Array.from({ length: 35 }, (_, i) => ({
-  id: i + 1,
-  title: `文章标题 ${i + 1}`,
-  summary: `这是文章 ${
-    i + 1
-  } 的摘要内容。这是一段较长的摘要文本，用于测试卡片布局和文本截断效果。`,
-  content: `这是文章 ${i + 1} 的详细内容...`,
-  publishTime: new Date(Date.now() - i * 86400000).toISOString(),
-  viewCount: Math.floor(Math.random() * 1000),
-  category: {
-    id: Math.floor(i / 10) + 1,
-    name: `分类${Math.floor(i / 10) + 1}`,
-  },
-  tags: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, (_, j) => ({
-    id: j + 1,
-    name: `标签${j + 1}`,
-  })),
-  thumbnail: i % 4 === 0 ? "https://picsum.photos/300/200" : null,
-}));
-
-const mockCategories = [
-  { id: 1, name: "前端开发" },
-  { id: 2, name: "后端开发" },
-  { id: 3, name: "数据库" },
-  { id: 4, name: "DevOps" },
-];
-
-const mockTags = [
-  { id: 1, name: "Vue" },
-  { id: 2, name: "Spring Boot" },
-  { id: 3, name: "MyBatis" },
-  { id: 4, name: "Element Plus" },
-  { id: 5, name: "Docker" },
-  { id: 6, name: "MySQL" },
-];
-
-// 初始化数据
-onMounted(() => {
-  // 设置初始筛选条件（从路由参数）
-  if (route.params.category) {
-    filter.category = route.params.category;
-  }
-  if (route.params.tag) {
-    filter.tag = route.params.tag;
-  }
-
-  // 加载模拟数据
-  loadArticles();
-  categories.value = mockCategories;
-  tags.value = mockTags;
-
-  // 监听窗口大小变化
-  window.addEventListener("resize", handleResize);
-});
-
-// 清理事件监听器
-// onUnmounted(() => {
-//   window.removeEventListener('resize', handleResize)
-// })
-
-// 从路由查询参数初始化筛选条件
-const initFromRouteQuery = () => {
-  const { category, tag, page } = route.query;
-
-  if (category) filter.category = category;
-  if (tag) filter.tag = tag;
-  if (page) currentPage.value = parseInt(page);
-};
-
 // 处理窗口大小变化
 const handleResize = () => {
   isSmallScreen.value = window.innerWidth < 768;
 };
 
+// 初始化数据
+onMounted(() => {
+  initFromRouteQuery();
+
+  loadArticles(); // 加载文章数据
+  loadCategoressAndTags(); // 加载分类和标签
+
+  // 监听窗口大小变化
+  window.addEventListener("resize", handleResize);
+});
+
+// 从路由查询参数初始化筛选条件
+const initFromRouteQuery = () => {
+  const { category, tag, tagId, page, keyword } = route.query;
+
+  if (category) filter.category = category;
+  if (tag) filter.tag = tag;
+  // 新增tagId的转换
+  if (tagId) {
+    const tagObj = tags.value.find((t) => t.id == tagId);
+    if (tagObj) filter.tag = tagObj.name;
+  }
+  if (page) currentPage.value = parseInt(page);
+  if (keyword) filter.keyword = keyword;
+};
+
+// 加载分类和标签数据(分类后端还没写)
+const loadCategoressAndTags = async () => {
+  try {
+    // 分类
+    // 从后端获取标签
+    tags.value = await tagApi.getTags();
+  } catch (error) {
+    console.error("加载分类标签失败:", error);
+  }
+};
+
 // 加载文章数据
-const loadArticles = () => {
-  // 模拟API调用延迟
-  setTimeout(() => {
-    let filteredArticles = [...mockArticles];
+const loadArticles = async () => {
+  try {
+    loading.value = true;
 
-    // 应用筛选条件
-    if (filter.category) {
-      filteredArticles = filteredArticles.filter(
-        (article) => article.category.name === filter.category
-      );
-    }
+    // 构建查询参数
+    const queryParams = {
+      page: currentPage.value,
+      size: pageSize.value,
+      // sort: `${sortField.value},desc`
+    };
 
-    if (filter.tag) {
-      filteredArticles = filteredArticles.filter((article) =>
-        article.tags.some((tag) => tag.name === filter.tag)
-      );
-    }
+    // 添加筛选条件
+    if (filter.keyword) queryParams.keyword = filter.keyword;
+    if (filter.categoryId) queryParams.categoryId = filter.categoryId;
+    if (filter.tagId) queryParams.tagId = filter.tagId;
 
-    // 应用排序
-    filteredArticles.sort((a, b) => {
-      if (sortField.value === "viewCount") {
-        return sortOrder.value === "desc"
-          ? b.viewCount - a.viewCount
-          : a.viewCount - b.viewCount;
-      } else {
-        return sortOrder.value === "desc"
-          ? new Date(b.publishTime) - new Date(a.publishTime)
-          : new Date(a.publishTime) - new Date(b.publishTime);
-      }
-    });
+    const response = await articleApi.getArticles(queryParams);
 
-    // 更新总数
-    total.value = filteredArticles.length;
-
-    // 应用分页
-    const start = (currentPage.value - 1) * pageSize.value;
-    const end = start + pageSize.value;
-    articles.value = filteredArticles.slice(start, end);
-  }, 300);
+    articles.value = response.records || response.data?.records || [];
+    total.value = response.total || response.data?.total || 0;
+  } catch (error) {
+    console.error("加载文章失败:", error);
+    ElMessage.error("加载文章失败");
+    articles.value = [];
+    total.value = 0;
+  } finally {
+    loading.value = false;
+  }
 };
 
 // 处理筛选条件变化
@@ -246,6 +204,7 @@ const handleSortChange = () => {
 const handleSizeChange = (newSize) => {
   pageSize.value = newSize;
   currentPage.value = 1;
+  updateRoute();
   loadArticles();
 };
 
@@ -259,8 +218,13 @@ const handleCurrentChange = (newPage) => {
 const updateRoute = () => {
   const query = { page: currentPage.value };
 
+  if (filter.keyword) query.keyword = filter.keyword;
   if (filter.category) query.category = filter.category;
-  if (filter.tag) query.tag = filter.tag;
+  if (filter.tag) {
+    // 将 tag name 转换为 tagId
+    const tagObj = tags.value.find((t) => t.name === filter.tag);
+    if (tagObj) query.tagId = tagObj.id;
+  }
 
   router.push({
     path: "/articles",
@@ -268,7 +232,7 @@ const updateRoute = () => {
   });
 };
 
-// 监听路由参数变化（修复版）
+// 监听路由参数变化
 watch(
   () => route.query,
   (newQuery) => {
@@ -277,9 +241,11 @@ watch(
       currentPage.value = parseInt(newQuery.page);
     }
 
-    // 2. 同步分类和标签到 filter 对象（关键修复）
-    filter.category = newQuery.category || ""; // 若参数不存在，重置为空
-    filter.tag = newQuery.tag || "";
+    // 2. 同步分类和标签到 filter 对象（
+    filter.keyword = newQuery.keyword || "";
+    filter.categoryId = newQuery.category || ""; // 若参数不存在，重置为空
+    filter.tagId = newQuery.tagId || "";
+    currentPage.value = parseInt(newQuery.page) || 1;
 
     // 3. 重新加载文章（此时会使用最新的筛选条件）
     loadArticles();

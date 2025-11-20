@@ -30,7 +30,7 @@
           :key="tag.id"
           type="info"
           class="tag"
-          @click="handleTagClick(tag.name)"
+          @click="handleTagClick(tag.id)"
         >
           {{ tag.name }}
         </el-tag>
@@ -40,9 +40,16 @@
 </template>
 
 <script setup>
+import { tagApi } from "@/api/articles";
+import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
+const tags = ref([]);
+
+onMounted(() => {
+  loadTags();
+});
 
 // 模拟数据，后续替换为API调用
 const categories = [
@@ -52,28 +59,29 @@ const categories = [
   { id: 4, name: "DevOps", count: 5 },
 ];
 
-const tags = [
-  { id: 1, name: "Vue" },
-  { id: 2, name: "Spring Boot" },
-  { id: 3, name: "MyBatis" },
-  { id: 4, name: "Element Plus" },
-  { id: 5, name: "Docker" },
-  { id: 6, name: "MySQL" },
-];
+// 加载标签
+const loadTags = async () => {
+  try {
+    tags.value = await tagApi.getTags();
+  } catch (error) {
+    console.error("加载标签失败:", error);
+    tags.value = [];
+  }
+};
 
 // 处理分类点击
 const handleCategoryClick = (categoryName) => {
   router.push({
     path: "/articles",
-    query: { category: categoryName, page: 1 },
+    query: { category: categoryName },
   });
 };
 
 // 处理标签点击
-const handleTagClick = (tagName) => {
+const handleTagClick = (tagId) => {
   router.push({
     path: "/articles",
-    query: { tag: tagName, page: 1 },
+    query: { tagId: tagId, page: 1 },
   });
 };
 </script>

@@ -4,7 +4,7 @@ import router from "@/router";
 
 // 创建axios实例
 const request = axios.create({
-  baseURL: "http://localhost:8080/v3/api-docs", // 根据实际后端地址调整
+  baseURL: "http://localhost:8080/api", // 根据实际后端地址调整
   timeout: 10000,
 });
 
